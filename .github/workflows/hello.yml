@@ -16,3 +16,7 @@ jobs:
     steps:
       - name: Say hello
         run: echo "Hello, Gabriel! This workflow ran automatically."
+      - name: Use a secret
+        run: echo "The secret value has length ${#MY_SECRET}"
+        env:
+          MY_SECRET: ${{ secrets.MY_TEST_SECRET }}
