@@ -5,6 +5,14 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  backend "s3" {
+  bucket  = "gabriel-devops-terraform-state"
+  key     = "devops-project/terraform.tfstate"
+  region  = "us-east-1"
+  profile = "devops-project-dev"
+}
+
 }
 
 provider "aws" {
