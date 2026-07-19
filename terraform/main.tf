@@ -10,7 +10,6 @@ terraform {
     bucket  = "gabriel-devops-terraform-state"
     key     = "devops-project/terraform.tfstate"
     region  = "us-east-1"
-    profile = "devops-project-dev"
   }
 
 }
