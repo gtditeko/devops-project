@@ -7,17 +7,15 @@ terraform {
   }
 
   backend "s3" {
-  bucket  = "gabriel-devops-terraform-state"
-  key     = "devops-project/terraform.tfstate"
-  region  = "us-east-1"
-  profile = "devops-project-dev"
-}
+    bucket = "gabriel-devops-terraform-state"
+    key    = "devops-project/terraform.tfstate"
+    region = "us-east-1"
+  }
 
 }
 
 provider "aws" {
-  region  = "us-east-1"
-  profile = "devops-project-dev"
+  region = "us-east-1"
 }
 
 resource "aws_s3_bucket" "website" {
@@ -51,13 +49,13 @@ resource "aws_s3_bucket_policy" "website" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid       = "AllowCloudFrontServicePrincipal"
-        Effect    = "Allow"
+        Sid    = "AllowCloudFrontServicePrincipal"
+        Effect = "Allow"
         Principal = {
           Service = "cloudfront.amazonaws.com"
         }
-        Action    = "s3:GetObject"
-        Resource  = "${aws_s3_bucket.website.arn}/*"
+        Action   = "s3:GetObject"
+        Resource = "${aws_s3_bucket.website.arn}/*"
         Condition = {
           StringEquals = {
             "AWS:SourceArn" = aws_cloudfront_distribution.website.arn
