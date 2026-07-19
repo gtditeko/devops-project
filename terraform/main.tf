@@ -7,9 +7,9 @@ terraform {
   }
 
   backend "s3" {
-    bucket  = "gabriel-devops-terraform-state"
-    key     = "devops-project/terraform.tfstate"
-    region  = "us-east-1"
+    bucket = "gabriel-devops-terraform-state"
+    key    = "devops-project/terraform.tfstate"
+    region = "us-east-1"
   }
 
 }
