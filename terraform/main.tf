@@ -76,6 +76,8 @@ resource "aws_cloudfront_origin_access_control" "website" {
 }
 
 resource "aws_cloudfront_distribution" "website" {
+  aliases = ["resume.diteko.co.uk"]
+
   origin {
     domain_name              = aws_s3_bucket.website.bucket_regional_domain_name
     origin_id                = "s3-website-origin"
@@ -106,6 +108,50 @@ resource "aws_cloudfront_distribution" "website" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn      = aws_acm_certificate.resume.arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
+  }
+}
+
+resource "aws_route53_zone" "resume" {
+  name = "resume.diteko.co.uk"
+}
+
+resource "aws_acm_certificate" "resume" {
+  domain_name       = "resume.diteko.co.uk"
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_route53_record" "resume_cert_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.resume.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = aws_route53_zone.resume.zone_id
+}
+
+resource "aws_route53_record" "resume" {
+  zone_id = aws_route53_zone.resume.zone_id
+  name    = "resume.diteko.co.uk"
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.website.domain_name
+    zone_id                = aws_cloudfront_distribution.website.hosted_zone_id
+    evaluate_target_health = false
   }
 }
