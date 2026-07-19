@@ -17,7 +17,6 @@ terraform {
 
 provider "aws" {
   region  = "us-east-1"
-  profile = "devops-project-dev"
 }
 
 resource "aws_s3_bucket" "website" {
