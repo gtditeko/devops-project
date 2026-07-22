@@ -1,5 +1,51 @@
 <!DOCTYPE html>
-<html>
-<head><title>My DevOps Project</title></head>
-<body><h1>Hello from S3!</h1></body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gabriel Diteko - Cloud Resume</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Allow API calls to our new endpoint -->
+    <meta http-equiv="Content-Security-Policy" 
+      content="default-src 'self'; 
+               connect-src 'self' https://1ff297rk33.execute-api.us-east-1.amazonaws.com; 
+               script-src 'self'; 
+               style-src 'self' 'unsafe-inline'; 
+               img-src 'self' data:;">
+</head>
+<body>
+    <header>
+        <h1>Gabriel Diteko</h1>
+        <p>AWS Solutions Architect Associate | Building the Future in the Cloud</p>
+    </header>
+
+    <section class="about">
+        <h2>About Me</h2>
+        <p>I completed the Cloud Resume Challenge to demonstrate hands-on AWS skills including S3, CloudFront, Route 53, Lambda, DynamoDB, and API Gateway.</p>
+    </section>
+
+    <section class="experience">
+        <h2>Experience & Projects</h2>
+        <ul>
+            <li><strong>Cloud Resume Challenge</strong> – Built and deployed this static site with serverless visitor counter using Terraform + AWS.</li>
+            <li>Other projects coming soon...</li>
+        </ul>
+    </section>
+
+    <section class="skills">
+        <h2>Skills</h2>
+        <ul>
+            <li>AWS (S3, CloudFront, Route 53, Lambda, DynamoDB, API Gateway, IAM)</li>
+            <li>Infrastructure as Code (Terraform)</li>
+            <li>HTML, CSS, JavaScript</li>
+        </ul>
+    </section>
+
+    <footer>
+        <p>Views: <span id="visit-count">0</span> | &copy; 2026 Gabriel Diteko</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
 </html>
