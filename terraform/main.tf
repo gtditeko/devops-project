@@ -227,6 +227,8 @@ resource "aws_apigatewayv2_api" "visitor_counter" {
   cors_configuration {
     allow_origins = ["https://resume.diteko.co.uk"]
     allow_methods = ["GET"]
+    allow_headers = ["content-type"]
+    max_age       = 300
   }
 }
 
@@ -240,12 +242,6 @@ resource "aws_apigatewayv2_integration" "lambda" {
 resource "aws_apigatewayv2_route" "get_count" {
   api_id    = aws_apigatewayv2_api.visitor_counter.id
   route_key = "GET /count"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
-}
-
-resource "aws_apigatewayv2_route" "options" {
-  api_id    = aws_apigatewayv2_api.visitor_counter.id
-  route_key = "OPTIONS /count"
   target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
 }
 
