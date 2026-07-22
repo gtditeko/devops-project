@@ -155,3 +155,110 @@ resource "aws_route53_record" "resume" {
     evaluate_target_health = false
   }
 }
+
+resource "aws_dynamodb_table" "visitor_count" {
+  name         = "resume-visitor-count"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+}
+
+data "archive_file" "lambda_zip" {
+  type        = "zip"
+  source_file = "${path.module}/lambda/visitor_counter.py"
+  output_path = "${path.module}/lambda/visitor_counter.zip"
+}
+
+resource "aws_lambda_function" "visitor_counter" {
+  function_name    = "resume-visitor-counter"
+  filename         = data.archive_file.lambda_zip.output_path
+  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+  handler          = "visitor_counter.handler"
+  runtime          = "python3.13"
+  role             = aws_iam_role.lambda_exec.arn
+}
+
+resource "aws_iam_role" "lambda_exec" {
+  name = "resume-visitor-counter-lambda-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "lambda_dynamodb" {
+  name = "lambda-dynamodb-update"
+  role = aws_iam_role.lambda_exec.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "dynamodb:UpdateItem"
+        Resource = aws_dynamodb_table.visitor_count.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
+  role       = aws_iam_role.lambda_exec.id
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_apigatewayv2_api" "visitor_counter" {
+  name          = "resume-visitor-counter-api"
+  protocol_type = "HTTP"
+
+  cors_configuration {
+    allow_origins = ["https://resume.diteko.co.uk"]
+    allow_methods = ["GET"]
+  }
+}
+
+resource "aws_apigatewayv2_integration" "lambda" {
+  api_id                 = aws_apigatewayv2_api.visitor_counter.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.visitor_counter.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "get_count" {
+  api_id    = aws_apigatewayv2_api.visitor_counter.id
+  route_key = "GET /count"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+}
+
+resource "aws_apigatewayv2_route" "options" {
+  api_id    = aws_apigatewayv2_api.visitor_counter.id
+  route_key = "OPTIONS /count"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+}
+
+resource "aws_apigatewayv2_stage" "default" {
+  api_id      = aws_apigatewayv2_api.visitor_counter.id
+  name        = "$default"
+  auto_deploy = true
+}
+
+resource "aws_lambda_permission" "apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.visitor_counter.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.visitor_counter.execution_arn}/*/*"
+}
